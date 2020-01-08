@@ -1,18 +1,16 @@
---- UART RECEIVER CORE 8-BIT
---- VERSION 1.0
---- START BIT , STOP BIT , NO PARITY , SAMPLING RATE = 8x
---- MODIFIED  : 14-01-2017
+--- RECEPTOR UART 8-BIT
+--- START BIT , STOP BIT , SEM PARIDADE , SAMPLING = 8x
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all; 
 entity uart_receiver is
-port ( rx_clk      : in std_logic ;                       -- receiver's clock  
-       rx_data_out : out std_logic_vector( 7 downto 0 ) ; -- 8 bit parallel data output to processor
-       rx_intr     : out std_logic ;                      -- receive interrupt 
-       rx_reset    : in std_logic ;                       -- reset
+port ( rx_clk      : in std_logic ;                       -- Clock do Receiver
+       rx_data_out : out std_logic_vector( 7 downto 0 ) ; -- 8 bits de dados em paralelo saindo do vetor
+       rx_intr     : out std_logic ;                      -- Interrompedor
+       rx_reset    : in std_logic ;                       -- Reset
        ERROR       : out std_logic ;
-       rx_data_in  : in std_logic ) ;                     -- serial data input
+       rx_data_in  : in std_logic ) ;                     -- Input de dados seriais
 end uart_receiver ;
 
 architecture archi_uart_receiver of uart_receiver is
@@ -38,15 +36,14 @@ if(rx_reset = '0') then
 elsif(rising_edge(rx_clk))then
 case STATE is
   
-     when x"00" => ---- CHECKING FOR FIRST LOW ----
+     when x"00" => ---- Esperando o primeiro bit baixo ----
 						 rx_intr <= '0' ;
                    if(rx_data_in = '0') then
 							sum_zeroes := sum_zeroes+1;
 							sample := sample + 1;
 							STATE <= x"01";
                    end if;                   
-     when x"01" => ---- CHECKING FOR START BIT, TO START SAMPLING AND 
-                   ---- TO RE-SYNCHRONISE AFTER EVERY DATA FRAME                    
+     when x"01" => ---- Esperando bit inicial, para começar o sampling e re-sincronizar após cada frame de dados  
                    if(rx_data_in = '0') then
 							sum_zeroes := sum_zeroes+1;
 							sample := sample + 1;
@@ -58,9 +55,9 @@ case STATE is
                    if(sample =8) then
                    
 								 if(sum_zeroes >= sum_ones and sum_zeroes>=4)then
-								 STATE <= x"02"; --- IDENTIFIED START BIT  !
+								 STATE <= x"02"; --- Start bit identificado 
 								 sample := 0;
-							 else            --- IF NOT START BIT !
+							 else            --- Sem start bit
 								 sample := 0;
 								 STATE <= x"00";
 							 end if;
@@ -71,7 +68,7 @@ case STATE is
                    else
 							STATE <= x"01";
                    end if;
-     when x"02" => ---- START SAMPLING THE DATA ----
+     when x"02" => ---- Amostragem dos dados ----
                    if(rx_data_in = '0') then
 							 sum_zeroes := sum_zeroes+1;
 							 sample := sample + 1;
@@ -105,7 +102,7 @@ case STATE is
                    else
 							STATE <= x"02";
                    end if; 
-     when x"03" => ---- CHECKING FOR STOP BIT ----
+     when x"03" => ---- Esperando stop bit ----
                    if(rx_data_in = '0') then
 							 sum_zeroes := sum_zeroes+1;
 							 sample := sample + 1;
@@ -126,10 +123,10 @@ case STATE is
 							 elsif(sample = 9)then
 								STATE <= x"05";
                    end if;  
-     when x"04" => ---- DATA SUCCESSFULLY RECEIVED, INTERRUPT GENERATION ----    
+     when x"04" => ---- Dados recebidos com sucesso, interromper fluxo ----    
                    rx_intr <= '1';
                    STATE <= x"00"; 
-     when x"05" => ---- NO STOP BIT RECEIVED, ERROR SIGNAL GENERATION , NEEDS RESET ----    
+     when x"05" => ---- Sem stop bit recebido, gera um erro e interrompe fluxo ----    
                    ERROR <= '1';                                                                     
      when OTHERS =>
                    rx_intr <='0';

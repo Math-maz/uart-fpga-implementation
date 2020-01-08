@@ -1,10 +1,5 @@
---- BAUD GENERATOR FOR UART
---- VERSION 1.0
---- INPUT CLOCK   : 100 MHz #Best clock --> 110.592 MHz#
---- BAUD RATES AVAILABLE : 600,1200,2400,4800,9600,19200,38400,57600,115200
---- MAXIMUM ERROR : +/- 0.5% in RX Clock @38400, +/- 0.005% in TX Clock @38400
---- MODIFIED      : 14-01-2017
---- DEVELOPER     : MITU RAJ , ERDCIIT , TRIVANDRUM
+--- INPUT CLOCK   : 100 MHz; Escolhido --> 110.592 MHz
+--- BAUD RATES DISPONÍVEIS : 9600, 115200
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -15,15 +10,15 @@ port(  clock_in : in std_logic ;
        enable : in std_logic ;
        baud_rate : in std_logic_vector(0 downto 0);
        reset : in std_logic ;
-       clock_out_tx : out std_logic ; --- CLOCK FOR UART TRANSMITTER
-       clock_out_rx : out std_logic   --- CLOCK FOR UART RECEIVER
+       clock_out_tx : out std_logic ; --- Clock para Transmissor
+       clock_out_rx : out std_logic   --- Clock para Receptor
      );
 end baud_generator ;
 
 architecture baud_generator_archi of baud_generator is
 signal divider :  unsigned(16 downto 0) ;
 begin
-  -------------- BAUD COUNTS CONFIGURED FOR 100 MHz CLOCK INPUT -------------------
+  -------------- BAUD RATE CONFIGURADO PARA O INPUT DE CLOCK DE 100 MHz -------------------
   divider <= "00001010001011000" when baud_rate = "1" else --- 9600
              "00000000110110010" when baud_rate = "0" ; --- 115200
            
